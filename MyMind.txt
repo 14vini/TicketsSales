@@ -1,0 +1,24 @@
+- Entidades (Domain/Entities) TickeOrder, Event -> O "Cozinheiro" 👨‍🍳
+  Propriedades protegidas, construtores válidos e regras de negócio
+
+- Repositories (Interfaces/Contracts) -> "Protocolos"
+  Criamos os protocolos primeiro antes da UseCase. O Use Case sabe QUE precisa salvar, mas não sabe COMO.
+
+- Use Cases (Application/UseCases) -> O "Garçom" 🧑‍💼
+  - É a camada de aplicação. Ele NÃO tem regras de negócio complexas.
+  - O papel dele é puramente COORDENAR o fluxo.
+  - Ele recebe os dados limpos, conversa com o Repository (via Interface)
+para buscar as entidades que estão guardadas, faz as entidades executarem
+suas próprias regras de negócio (métodos das entidades) e,
+se tudo der certo, manda o Repository salvar o novo estado de volta.
+  - Ele serve como uma barreira: se a entidade estourar um erro,
+  o Use Case interrompe o processo antes de tocar no banco de dados.
+
+- Controllers (API/Controllers) -> A "Porta de Entrada / Balcão de Atendimento" 🚪
+  - É a camada de infraestrutura que fica exposta para a internet (HTTP).
+  - Ele NÃO sabe salvar no banco e NÃO sabe regras de negócio.
+  - O papel dele é receber a requisição HTTP (o JSON enviado pelo Postman ou pelo Frontend), 
+desempacotar esses dados em um objeto simples (DTO/Request) e injetar esses dados no Use Case correspondente.
+  - Ele fica envelopado em um bloco `try-catch`. Se o Use Case ou a Entidade dispararem uma exceção,
+  o Controller captura isso e traduz em uma resposta HTTP amigável
+   (como Status 201 para sucesso, Status 400 para erro de validação do usuário, ou Status 500 para colapso no servidor).
