@@ -19,6 +19,9 @@ builder.Services.AddTransient<GetAllEventsUseCase>();
 builder.Services.AddSingleton<ITicketOrderRepository, InMemoryTicketOrderRepository>();
 builder.Services.AddTransient<CreateTicketOrderUseCase>();
 
+builder.Services.AddTransient<CreateTicketOrderUseCase>();
+builder.Services.AddTransient<GetAllTicketOrdersUseCase>();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())

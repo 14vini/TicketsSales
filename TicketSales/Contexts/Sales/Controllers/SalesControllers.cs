@@ -12,11 +12,13 @@ namespace TicketSales.Contexts.Sales.Controllers
     public class SalesController : ControllerBase
     {
         private readonly CreateTicketOrderUseCase _createOrderUseCase;
+        private readonly GetAllTicketOrdersUseCase _getAllOrdersUseCase;
 
         // O Controller recebe o Use Case que ele precisa usar pelo construtor (Injeção de Dependência)
-        public SalesController(CreateTicketOrderUseCase createOrderUseCase)
+        public SalesController(CreateTicketOrderUseCase createOrderUseCase, GetAllTicketOrdersUseCase getAllOrdersUseCase)
         {
             _createOrderUseCase = createOrderUseCase;
+            _getAllOrdersUseCase = getAllOrdersUseCase;
         }
 
         [HttpPost] // fazer compra
@@ -44,6 +46,21 @@ namespace TicketSales.Contexts.Sales.Controllers
                 return StatusCode(500, new { error = "An unexpected error occurred." });
             }
         }
+
+        [HttpGet] // listar vendas
+        public IActionResult GetAll()
+        {
+            try
+            {
+                var orders = _getAllOrdersUseCase.Execute();
+                return Ok(orders);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new { error = "An unexpected error occurred." });
+            }
+        }
+
     }
 
     public class CreateOrderRequest
