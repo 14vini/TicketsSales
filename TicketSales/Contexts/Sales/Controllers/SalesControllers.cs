@@ -13,12 +13,14 @@ namespace TicketSales.Contexts.Sales.Controllers
     {
         private readonly CreateTicketOrderUseCase _createOrderUseCase;
         private readonly GetAllTicketOrdersUseCase _getAllOrdersUseCase;
+        private readonly ApprovePaymentUseCase _approvePaymentUseCase; // ADICIONADO: Use Case para aprovar pagamento`
 
         // O Controller recebe o Use Case que ele precisa usar pelo construtor (Injeção de Dependência)
-        public SalesController(CreateTicketOrderUseCase createOrderUseCase, GetAllTicketOrdersUseCase getAllOrdersUseCase)
+        public SalesController(CreateTicketOrderUseCase createOrderUseCase, GetAllTicketOrdersUseCase getAllOrdersUseCase, ApprovePaymentUseCase approvePaymentUseCase)
         {
             _createOrderUseCase = createOrderUseCase;
             _getAllOrdersUseCase = getAllOrdersUseCase;
+            _approvePaymentUseCase = approvePaymentUseCase;
         }
 
         [HttpPost] // fazer compra
@@ -54,6 +56,25 @@ namespace TicketSales.Contexts.Sales.Controllers
             {
                 var orders = _getAllOrdersUseCase.Execute();
                 return Ok(orders);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new { error = "An unexpected error occurred." });
+            }
+        }
+
+                // ADICIONADO: Rota para aprovar o pagamento de uma venda específica
+        [HttpPost("{id}/approve")]
+        public IActionResult Approve(Guid id)
+        {
+            try
+            {
+                _approvePaymentUseCase.Execute(id);
+                return Ok(new { message = "Payment approved successfully! Order status: Approved." });
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(new { error = ex.Message });
             }
             catch (Exception)
             {

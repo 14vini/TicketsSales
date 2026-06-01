@@ -1,29 +1,58 @@
-using TicketSales.Contexts.Events.Repositories;
+using System.Text.Json.Serialization;
+using Microsoft.EntityFrameworkCore;
+using TicketSales.Infrastructure.Data;
+//Use Cases
 using TicketSales.Contexts.Events.Application.UseCases;
-using TicketSales.Contexts.Sales.Repositories;
 using TicketSales.Contexts.Sales.Application.UseCases;
+//Interfaces
+using TicketSales.Contexts.Events.Domain.Entities;
+using TicketSales.Contexts.Events.Repositories;
+using TicketSales.Contexts.Sales.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+// controllers 
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    // Avisa o C# para transformar os Enums em String na hora de gerar o JSON no Swagger/Postman
+    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddOpenApi();
 
-// Registrando o nosso repositório fake e o Use Case no sistema de dependências do C#
-builder.Services.AddSingleton<IEventRepository, InMemoryEventRepository>();
+
+// ------------------------------------------------------------------------------------------------
+//Use Cases :
+
+//Events
 builder.Services.AddTransient<CreateEventUseCase>();
 builder.Services.AddTransient<GetAllEventsUseCase>();
 
-// Registros do Contexto de Vendas (Sales)
-builder.Services.AddSingleton<ITicketOrderRepository, InMemoryTicketOrderRepository>();
-builder.Services.AddTransient<CreateTicketOrderUseCase>();
-
+// sales
 builder.Services.AddTransient<CreateTicketOrderUseCase>();
 builder.Services.AddTransient<GetAllTicketOrdersUseCase>();
+builder.Services.AddTransient<ApprovePaymentUseCase>();
+// ------------------------------------------------------------------------------------------------
+//DB Context e Repositórios:
+
+//repositório e injetar a dependência do DbContext
+builder.Services.AddScoped<IEventRepository, EventRepository>();
+builder.Services.AddScoped<ITicketOrderRepository, TicketOrderRepository>();
+
+// DB config
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var mySqlServerVersion = new MySqlServerVersion(new Version(8, 0, 36));
+
+builder.Services.AddDbContext<TicketSalesDbContext>(options =>
+    options.UseMySql(connectionString, mySqlServerVersion));
+
+// ------------------------------------------------------------------------------------------------
 
 var app = builder.Build();
 
+// swagger ambiente
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -35,29 +64,4 @@ app.UseHttpsRedirection();
 
 app.MapControllers();
 
-// Deixei o exemplo do weatherforecast aqui caso queira manter, mas o foco agora é o Controller
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
-
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}

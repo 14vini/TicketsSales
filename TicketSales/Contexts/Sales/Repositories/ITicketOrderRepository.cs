@@ -12,5 +12,6 @@ namespace TicketSales.Contexts.Sales.Repositories
         void Add(TicketOrder order);
         TicketOrder GetById(Guid id);
         List<TicketOrder> GetAll();
+        void Update(TicketOrder order);
     }
 }
